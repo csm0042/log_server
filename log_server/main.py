@@ -8,6 +8,7 @@ from .message import Message
 
 
 
+
 class LogServer(object):
     def __init__(self):
         # Set up local logging
