@@ -1,7 +1,9 @@
 import datetime
 import logging
+import queue
+import os
 import time
-from multiprocessing.connection import Listener
+from multiprocessing.connection import Listener, Client
 from .logger_mp import listener_configurer, worker_configurer
 from .message import Message
 
@@ -20,10 +22,24 @@ class LogServer(object):
         self.close_pending = False
         self.in_msg_loop = True
 
+        self.msg_in_queue = queue.Queue(-1)
+        self.log_queue = queue.Queue(-1)
+        self.work_queue = queue.Queue(-1)
+        self.msg_out_queue = queue.Queue(-1)
+        self.msg_recv = None
+        self.msg_in = None
+
+        self.address = str()
+        self.receiver_address = str()
+        self.transmitter_address = str()
+        self.setup_receiver()
+        self.setup_transmitter()
+
+
 
     def setup_receiver(self, address=None, port=None):
         self.receiver_address = (address, port) or ("localhost", 6001)
-        self.receiver = Listener(self.address, authkey=b"secret password")
+        self.receiver = Listener(self.receiver_address, authkey=b"secret password")
         self.receiver_conn = self.receiver.accept()
 
 
@@ -32,9 +48,71 @@ class LogServer(object):
         self.transmitter_conn = Client(self.transmitter_address, authkey=b"secret password")
 
 
+    def receive_and_buffer(self):
+        """ This method checks the receiver connection for incoming messages and establishes the
+        connection and receives the incoming message if one is availabe to receive.  Messages are
+        deposited into the incoming message buffer for later processing """
+        while True:
+            try:
+                if self.receiver_conn.poll() is True:
+                    self.msg_recv = self.receiver_conn.recv()
+                    if self.msg_recv is not None:
+                        self.msg_in_queue.put_nowait(self.msg_recv)
+                    self.msg_recv = None
+                else:
+                    break
+            except:
+                break
+
+
+    def process_in_buffer(self):
+        """ This method cycles through the incoming communication buffer and sorts the messages out
+        by type """
+        while True:
+            try:
+                self.msg_in = self.msg_in_queue.get_nowait()
+                if isinstance(self.msg_in, Message):
+                    self.work_queue.put_nowait(self.msg_in)
+                    self.msg_in = None
+                elif isinstance(self.msg_in, logging.LogRecord):
+                    self.log_queue.put_nowait(self.msg_in)
+                    self.msg_in = None
+            except:
+                break
+
+
+    def process_log_buffer(self):
+        """ Processes log messages received from other processes via whatever handlers are
+        currenntly defined. """
+        pass
+
+
+    def process_work_buffer(self):
+        """ Processes any non-alarm messages received from other processes """
+        pass
+
+
+    def send_outgoing(self):
+        """ Transmits outgoing messages to other processes as necessary """
+        pass
+
+
+
     def run(self):
         self.logger.info("Log Server Started")
         while self.in_msg_loop is True:
+            self.receive_and_buffer()
+            self.process_in_buffer()
+            self.process_log_buffer()
+            self.process_work_buffer()
+            self.send_outgoing()
+
+
+
+if __name__ == "__main__":
+    this_process = LogServer()
+    this_process.run()
+
 
 
 
