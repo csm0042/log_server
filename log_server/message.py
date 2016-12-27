@@ -22,25 +22,25 @@ __status__ = "Development"
 class Message(object):
     def __init__(self, logger=None, **kwargs):
         # Configure logger
-        self.logger = logger or logging.getLogger(__name__)      
-        # Init tags        
-        self.source = str()
-        self.dest = str()
-        self.type = str()
-        self.name = str()
-        self.payload = str()
+        self.logger = logger or logging.getLogger(__name__)
+        # Init tags
+        self.__source = int()
+        self.__dest = int()
+        self.__type = str()
+        self.__name = str()
+        self.__payload = str()
         self.part = []
-        # Process input variables if present    
+        # Process input variables if present
         if kwargs is not None:
             for key, value in kwargs.items():
                 if key == "source":
                     self.source = value
                 if key == "dest":
-                    self.dest = value 
+                    self.dest = value
                 if key == "type":
-                    self.type = value                    
+                    self.type = value
                 if key == "name":
-                    self.name = value 
+                    self.name = value
                 if key == "payload":
                     self.payload = value
                 if key == "raw":
@@ -58,13 +58,13 @@ class Message(object):
             self.part = value.split(sep=",", maxsplit=4)
             if len(self.part) >= 1:
                 self.source = self.part[0]
-            if len(self.part) >= 2:                
+            if len(self.part) >= 2:
                 self.dest = self.part[1]
-            if len(self.part) >= 3:                
+            if len(self.part) >= 3:
                 self.type = self.part[2]
-            if len(self.part) >= 4:                
+            if len(self.part) >= 4:
                 self.name = self.part[3]
-            if len(self.part) >= 5:                
+            if len(self.part) >= 5:
                 self.payload = self.part[4]
 
     @property
@@ -73,8 +73,12 @@ class Message(object):
 
     @source.setter
     def source(self, value):
+        if isinstance(value, int) is True:
+            if value >= 6000 and value < 7000:
+                self.__source = value
         if isinstance(value, str) is True:
-            self.__source = value
+            if int(value) >= 6000 and int(value) < 7000:
+                self.__source = int(value)
 
     @property
     def dest(self):
@@ -82,8 +86,12 @@ class Message(object):
 
     @dest.setter
     def dest(self, value):
+        if isinstance(value, int) is True:
+            if value >= 6000 and value < 7000:
+                self.__dest = value
         if isinstance(value, str) is True:
-            self.__dest = value
+            if int(value) >= 6000 and int(value) < 7000:
+                self.__dest = int(value)
 
     @property
     def type(self):
