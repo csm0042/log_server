@@ -28,6 +28,7 @@ class Message(object):
         self.__dest = int()
         self.__type = str()
         self.__name = str()
+        self.__state = str()
         self.__payload = str()
         self.part = []
         # Process input variables if present
@@ -41,6 +42,8 @@ class Message(object):
                     self.type = value
                 if key == "name":
                     self.name = value
+                if key == "state":
+                    self.state = value
                 if key == "payload":
                     self.payload = value
                 if key == "raw":
@@ -50,12 +53,12 @@ class Message(object):
     @property
     def raw(self):
         return (self.source + "," + self.dest + "," + self.type + "," +
-                self.name + "," + self.payload)
+                self.name + "," + self.state + "," + self.payload)
 
     @raw.setter
     def raw(self, value):
         if isinstance(value, str) is True:
-            self.part = value.split(sep=",", maxsplit=4)
+            self.part = value.split(sep=",", maxsplit=5)
             if len(self.part) >= 1:
                 self.source = self.part[0]
             if len(self.part) >= 2:
@@ -65,7 +68,9 @@ class Message(object):
             if len(self.part) >= 4:
                 self.name = self.part[3]
             if len(self.part) >= 5:
-                self.payload = self.part[4]
+                self.state = self.part[4]
+            if len(self.part) >= 6:
+                self.payload = self.part[5]
 
     @property
     def source(self):
@@ -75,10 +80,10 @@ class Message(object):
     def source(self, value):
         if isinstance(value, int) is True:
             if value >= 6000 and value < 7000:
-                self.__source = value
+                self.__source = str(value)
         if isinstance(value, str) is True:
             if int(value) >= 6000 and int(value) < 7000:
-                self.__source = int(value)
+                self.__source = value
 
     @property
     def dest(self):
@@ -88,10 +93,10 @@ class Message(object):
     def dest(self, value):
         if isinstance(value, int) is True:
             if value >= 6000 and value < 7000:
-                self.__dest = value
+                self.__dest = str(value)
         if isinstance(value, str) is True:
             if int(value) >= 6000 and int(value) < 7000:
-                self.__dest = int(value)
+                self.__dest = value
 
     @property
     def type(self):
@@ -112,6 +117,17 @@ class Message(object):
             self.__name = value
 
     @property
+    def state(self):
+        return self.__state
+
+    @state.setter
+    def state(self, value):
+        if isinstance(value, str) is True:
+            self.__state = value
+        elif isinstance(value, int) is True:
+            self.__state = str(value)
+
+    @property
     def payload(self):
         return self.__payload
 
@@ -119,4 +135,3 @@ class Message(object):
     def payload(self, value):
         if isinstance(value, str) is True:
             self.__payload = value
-                         
