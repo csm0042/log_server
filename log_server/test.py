@@ -33,13 +33,13 @@ class TestSend(object):
 
     def run(self):
         print("\n\nCreating message to send")
-        self.msg_to_send = message.Message(source=6000, dest=6013, type="161", name="lrlt1", state=0, payload="192.168.86.25")
+        self.msg_to_send = message.Message(source=6000, dest=6013, type="162", name="lrlt1", state=0, payload="192.168.86.25")
         self.target_address = ("localhost", 6013)
         self.conn = Client(self.target_address, authkey=b"password")
         print("Connection accepted, sending message")
         self.conn.send(self.msg_to_send.raw)
         print("Message sent, closing connection")
-        self.conn.close()
+        #self.conn.close()
         print("Connection closed")
 
 
