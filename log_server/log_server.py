@@ -6,13 +6,14 @@
 import datetime
 import logging
 import logging.handlers
+import file_logger
+import message
+import multiprocessing
+from multiprocessing.connection import Listener
 import os
 import sys
 import time
-import multiprocessing
-from multiprocessing.connection import Listener
-sys.path.insert(0, os.path.abspath('..'))
-import message
+
 
 
 # Authorship Info *********************************************************************************
@@ -29,43 +30,14 @@ __status__ = "Development"
 # Main process class ******************************************************************************
 class LogServer(object):
     """ Log server that listens on port 6000 for incoming messages from other processes """
-    def __init__(self):
+    def __init__(self, logger=None):
         # Set up local logging
-        self.debug_logfile = (os.path.dirname(os.path.abspath(__file__)) + "/logs/debug.log")
-        self.info_logfile = (os.path.dirname(os.path.abspath(__file__)) + "/logs/info.log")
-        self.setup_log_handlers(self.debug_logfile, self.info_logfile)
-        self.logger = logging.getLogger(__name__)
-        self.master_logger = None
+        self.logger = logger or logging.getLogger(__name__)
         self.heartbeat = datetime.datetime.now()
         self.shutdown_time = None
         self.main_loop = True
         self.setup_listener_connection("localhost", 6000, b"password")
         self.conn = None
-
-
-    def setup_log_handlers(self, debug_logfile, info_logfile):
-        root = logging.getLogger()
-        root.handlers = []
-        # Create desired handlers
-        debug_handler = logging.handlers.TimedRotatingFileHandler(debug_logfile, when="h", interval=1, backupCount=24, encoding=None, delay=False, utc=False, atTime=None)
-        info_handler = logging.handlers.TimedRotatingFileHandler(info_logfile, when="h", interval=1, backupCount=24, encoding=None, delay=False, utc=False, atTime=None)
-        console_handler = logging.StreamHandler()
-        # Create individual formats for each handler
-        debug_formatter = logging.Formatter('%(processName)-16s,  %(asctime)-24s,  %(levelname)-8s, %(message)s')
-        info_formatter = logging.Formatter('%(processName)-16s,  %(asctime)-24s,  %(levelname)-8s, %(message)s')    
-        console_formatter = logging.Formatter('%(processName)-16s,  %(asctime)-24s,  %(levelname)-8s, %(message)s')
-        # Set formatting options for each handler
-        debug_handler.setFormatter(debug_formatter)
-        info_handler.setFormatter(info_formatter)
-        console_handler.setFormatter(console_formatter)
-        # Set logging levels for each handler
-        debug_handler.setLevel(logging.DEBUG)
-        info_handler.setLevel(logging.INFO)
-        console_handler.setLevel(logging.INFO)
-        # Add handlers to root logger
-        root.addHandler(debug_handler)
-        root.addHandler(info_handler)
-        root.addHandler(console_handler)
         
 
     def setup_listener_connection(self, host, port, password):
